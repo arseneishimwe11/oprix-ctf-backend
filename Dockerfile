@@ -63,4 +63,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start application directly (more efficient than using pnpm in production)
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/main"]
