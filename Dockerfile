@@ -16,6 +16,9 @@ RUN npm install -g pnpm && \
     pnpm install && \
     pnpm store prune
 
+# Copy TypeScript config and NestJS config (needed for build)
+COPY tsconfig*.json nest-cli.json ./
+
 # Copy source code
 COPY . .
 
