@@ -28,18 +28,11 @@ RUN npx prisma generate
 # Build the application
 RUN pnpm run build
 
-# Verify build succeeded and dist exists
-RUN ls -la && \
-    if [ -d "dist" ]; then \
-        echo "✅ dist folder exists" && ls -la dist/ && \
-        if [ -f "dist/main.js" ]; then \
-            echo "✅ dist/main.js found"; \
-        else \
-            echo "❌ ERROR: dist/main.js NOT found!" && ls -la dist/; \
-        fi \
-    else \
-        echo "❌ ERROR: dist folder NOT created!" && exit 1; \
-    fi
+# Verify build output (simplified for Railway logs)
+RUN echo "=== BUILD VERIFICATION ===" && \
+    ls -la dist/ && \
+    echo "=== dist/main.js exists: ===" && \
+    ls -la dist/main.js
 
 # Stage 2: Production
 FROM node:18-alpine AS production
@@ -76,4 +69,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start application directly (more efficient than using pnpm in production)
-CMD ["node", "dist/main"]
+CMD ["node", "dist/main.js"]
