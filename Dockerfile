@@ -28,6 +28,19 @@ RUN npx prisma generate
 # Build the application
 RUN pnpm run build
 
+# Verify build succeeded and dist exists
+RUN ls -la && \
+    if [ -d "dist" ]; then \
+        echo "✅ dist folder exists" && ls -la dist/ && \
+        if [ -f "dist/main.js" ]; then \
+            echo "✅ dist/main.js found"; \
+        else \
+            echo "❌ ERROR: dist/main.js NOT found!" && ls -la dist/; \
+        fi \
+    else \
+        echo "❌ ERROR: dist folder NOT created!" && exit 1; \
+    fi
+
 # Stage 2: Production
 FROM node:18-alpine AS production
 
