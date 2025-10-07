@@ -49,8 +49,8 @@ RUN npm install -g pnpm && \
     pnpm install --prod --frozen-lockfile && \
     pnpm store prune
 
-# Generate Prisma Client in production
-RUN npx prisma generate
+# Generate Prisma Client in production using pnpm
+RUN pnpm prisma generate
 
 # Copy built application from builder
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
