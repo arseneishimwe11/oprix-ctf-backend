@@ -25,13 +25,20 @@ COPY . .
 # Generate Prisma Client
 RUN npx prisma generate
 
-# Build the application
-RUN pnpm run build
-
-# Debug: Show what's actually in dist (won't fail build)
-RUN echo "=== Checking dist folder ===" && \
-    find dist/ -type f 2>/dev/null | head -20 || echo "No files in dist yet" && \
-    echo "=== End check ===" || true
+# Build the application with verbose output
+RUN echo "=== Starting NestJS build ===" && \
+    pnpm run build 2>&1 | tee build.log && \
+    echo "=== Build command finished ===" && \
+    echo "=== Checking for dist folder and files ===" && \
+    ls -la && \
+    if [ -d "dist" ]; then \
+        echo "dist exists - contents:" && \
+        find dist -type f | head -30 || echo "dist is empty!"; \
+    else \
+        echo "CRITICAL: dist folder doesn't exist!" && \
+        echo "Build log:" && cat build.log && \
+        exit 1; \
+    fi
 
 # Stage 2: Production
 FROM node:18-alpine AS production
