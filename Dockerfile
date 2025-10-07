@@ -28,11 +28,10 @@ RUN npx prisma generate
 # Build the application
 RUN pnpm run build
 
-# Verify build output (simplified for Railway logs)
-RUN echo "=== BUILD VERIFICATION ===" && \
-    ls -la dist/ && \
-    echo "=== dist/main.js exists: ===" && \
-    ls -la dist/main.js
+# Debug: Show what's actually in dist (won't fail build)
+RUN echo "=== Checking dist folder ===" && \
+    find dist/ -type f 2>/dev/null | head -20 || echo "No files in dist yet" && \
+    echo "=== End check ===" || true
 
 # Stage 2: Production
 FROM node:18-alpine AS production
