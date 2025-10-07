@@ -45,9 +45,9 @@ COPY --chown=nestjs:nodejs package*.json pnpm-lock.yaml ./
 COPY --chown=nestjs:nodejs prisma ./prisma
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 
-# Install pnpm and ALL dependencies (simplest solution for pnpm)
+# Install pnpm and ALL dependencies with flat structure (fixes symlink issues)
 RUN npm install -g pnpm && \
-    pnpm install --frozen-lockfile && \
+    pnpm install --frozen-lockfile --shamefully-hoist && \
     pnpm exec prisma generate && \
     pnpm store prune
 
