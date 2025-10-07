@@ -40,19 +40,16 @@ RUN apk add --no-cache dumb-init
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nestjs -u 1001
 
-# Copy package files and prisma schema
+# Copy package files, prisma schema, and built app from builder
 COPY --chown=nestjs:nodejs package*.json pnpm-lock.yaml ./
 COPY --chown=nestjs:nodejs prisma ./prisma
-
-# Install pnpm and production dependencies (fresh install to avoid symlink issues)
-RUN npm install -g pnpm && \
-    pnpm install --prod --frozen-lockfile && \
-    pnpm store prune
-
-# Copy built application and generated Prisma Client from builder
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nestjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder --chown=nestjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+
+# Install pnpm and ALL dependencies (simplest solution for pnpm)
+RUN npm install -g pnpm && \
+    pnpm install --frozen-lockfile && \
+    pnpm exec prisma generate && \
+    pnpm store prune
 
 # Create uploads directory
 RUN mkdir -p uploads && chown -R nestjs:nodejs uploads
