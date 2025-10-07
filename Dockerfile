@@ -49,11 +49,10 @@ RUN npm install -g pnpm && \
     pnpm install --prod --frozen-lockfile && \
     pnpm store prune
 
-# Generate Prisma Client in production using pnpm exec
-RUN pnpm exec prisma generate
-
-# Copy built application from builder
+# Copy built application and generated Prisma Client from builder
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
+COPY --from=builder --chown=nestjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nestjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
 # Create uploads directory
 RUN mkdir -p uploads && chown -R nestjs:nodejs uploads
