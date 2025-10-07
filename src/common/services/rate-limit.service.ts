@@ -12,14 +12,29 @@ export class RateLimitService {
   private readonly redis: RedisClientType;
 
   constructor(private configService: ConfigService) {
+    const redisHost = this.configService.get<string>('redis.host', 'localhost');
+    const redisPort = this.configService.get<number>('redis.port', 6379);
+    const redisPassword = this.configService.get<string>('redis.password');
+    
+    this.logger.log(`Connecting to Redis at ${redisHost}:${redisPort}`);
+    
     this.redis = createClient({
       socket: {
-        host: this.configService.get<string>('redis.host', 'localhost'),
-        port: this.configService.get<number>('redis.port', 6379),
+        host: redisHost,
+        port: redisPort,
       },
-      password: this.configService.get<string>('redis.password'),
+      password: redisPassword,
       database: this.configService.get<number>('redis.db', 0),
     });
+    
+    this.redis.on('error', (err) => {
+      this.logger.error('Redis connection error', err);
+    });
+    
+    this.redis.on('connect', () => {
+      this.logger.log('Redis connected successfully');
+    });
+    
     this.redis.connect();
   }
 
