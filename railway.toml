@@ -1,9 +1,8 @@
 [build]
-builder = "NIXPACKS"
-buildCommand = "pnpm run deploy:railway"
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "node dist/src/main.js"
 healthcheckPath = "/api/v1/health"
 healthcheckTimeout = 60
 restartPolicyType = "ON_FAILURE"

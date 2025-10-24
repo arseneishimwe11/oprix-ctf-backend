@@ -1,5 +1,4 @@
 # Multi-stage build for optimized production image
-# Stage 1: Build
 FROM node:18-alpine AS builder
 
 WORKDIR /app
@@ -11,7 +10,7 @@ RUN apk add --no-cache python3 make g++
 COPY package*.json pnpm-lock.yaml ./
 COPY prisma ./prisma/
 
-# Install all dependencies (need devDependencies for build)
+# Install all dependencies (devDependencies for build)
 RUN npm install -g pnpm && \
     pnpm install && \
     pnpm store prune
@@ -28,7 +27,7 @@ RUN npx prisma generate
 # Build the application
 RUN pnpm run build
 
-# Stage 2: Production
+# Production
 FROM node:18-alpine AS production
 
 WORKDIR /app
@@ -45,10 +44,11 @@ COPY --chown=nestjs:nodejs package*.json pnpm-lock.yaml ./
 COPY --chown=nestjs:nodejs prisma ./prisma
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 
-# Install pnpm and ALL dependencies with flat structure (fixes symlink issues)
+# Install pnpm and ALL dependencies with flat structure
 RUN npm install -g pnpm && \
     pnpm install --frozen-lockfile --shamefully-hoist && \
     pnpm exec prisma generate && \
+    pnpm exec prisma migrate deploy && \
     pnpm store prune
 
 # Create uploads directory
@@ -67,5 +67,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start application directly (more efficient than using pnpm in production)
+# Start application
 CMD ["node", "dist/src/main.js"]
