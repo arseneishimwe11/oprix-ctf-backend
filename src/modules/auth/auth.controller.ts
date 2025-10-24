@@ -1,5 +1,6 @@
 import * as common from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/auth.decorator';
@@ -16,6 +17,7 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private clerkSyncService: ClerkSyncService,
+    private configService: ConfigService,
   ) {}
 
   /**
@@ -95,16 +97,26 @@ export class AuthController {
   }
 
   /**
-   * Health check for auth service
+   * Health check for auth service with Clerk configuration status
    */
   @common.Get('health')
   @ApiOperation({ summary: 'Auth service health check' })
   @ApiResponse({ status: 200, description: 'Service is healthy' })
   healthCheck() {
+    const clerkFrontendApi = this.configService.get<string>('CLERK_FRONTEND_API');
+    const clerkSecretKey = this.configService.get<string>('CLERK_SECRET_KEY');
+    const clerkPublishableKey = this.configService.get<string>('CLERK_PUBLISHABLE_KEY');
+    
     return {
       status: 'ok',
       service: 'auth',
       timestamp: new Date().toISOString(),
+      clerk: {
+        configured: !!(clerkFrontendApi && clerkSecretKey),
+        frontendApi: clerkFrontendApi || 'NOT_SET',
+        hasSecretKey: !!clerkSecretKey,
+        hasPublishableKey: !!clerkPublishableKey,
+      },
     };
   }
 }

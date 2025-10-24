@@ -8,9 +8,8 @@ import { User } from '@prisma/client';
 
 /**
  * JWT Strategy for Clerk authentication
- * PERFORMANCE: Verifies JWT locally using Clerk's public keys (JWKS)
+ * Verifies JWT locally using Clerk's public keys (JWKS)
  * NO API calls to Clerk on every request - validates signature locally
- * This is 10-50x faster than calling Clerk API for verification
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -24,14 +23,15 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     const clerkAudience = configService.get<string>('CLERK_AUDIENCE');
     
     if (!clerkFrontendApi) {
-      throw new Error('CLERK_FRONTEND_API is required (e.g., https://your-app.clerk.accounts.dev)');
+      throw new Error('CLERK_FRONTEND_API is required');
     }
     
-    super({
+    // Build JWT options - only include audience if it's configured
+    const jwtOptions: any = {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       
-      // PERFORMANCE: Local JWT verification using Clerk's public keys
+      // Local JWT verification using Clerk's public keys
       // Fetches keys from JWKS endpoint and caches them (NO API call per request)
       secretOrKeyProvider: passportJwtSecret({
         cache: true,          // Cache keys for performance
@@ -40,20 +40,26 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         jwksUri: `${clerkFrontendApi}/.well-known/jwks.json`,
       }),
       
-      // Validate issuer and audience
+      // Validate issuer
       issuer: clerkFrontendApi,
-      audience: clerkAudience,
       
       // Algorithm used by Clerk
       algorithms: ['RS256'],
-    });
+    };
+    
+    // Only validate audience if it's configured
+    if (clerkAudience) {
+      jwtOptions.audience = clerkAudience;
+    }
+    
+    super(jwtOptions);
     
     this.logger.log('JWT Strategy initialized with local verification (JWKS)');
   }
 
   /**
    * Validates decoded JWT payload and returns user
-   * PERFORMANCE: Token already verified by passport-jwt locally (NO Clerk API call)
+   * Token already verified by passport-jwt locally (NO Clerk API call)
    * This method only runs AFTER successful JWT signature verification
    * @param payload - Decoded and verified JWT payload from Clerk
    */

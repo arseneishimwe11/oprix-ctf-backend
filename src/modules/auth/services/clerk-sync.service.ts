@@ -130,7 +130,6 @@ export class ClerkSyncService {
       }
 
       // Verify webhook using Clerk's method
-      // Note: Install @clerk/clerk-sdk-node if not already installed
       const crypto = require('crypto');
       const signedContent = `${svix_id}.${svix_timestamp}.${payload}`;
       const secret = webhookSecret.split('_')[1]; // Remove 'whsec_' prefix
