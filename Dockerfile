@@ -48,7 +48,6 @@ COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 RUN npm install -g pnpm && \
     pnpm install --frozen-lockfile --shamefully-hoist && \
     pnpm exec prisma generate && \
-    pnpm exec prisma migrate deploy && \
     pnpm store prune
 
 # Create uploads directory
