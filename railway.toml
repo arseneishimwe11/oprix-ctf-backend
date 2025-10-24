@@ -1,5 +1,6 @@
 [build]
 builder = "NIXPACKS"
+buildCommand = "pnpm run deploy:railway"
 
 [deploy]
 startCommand = "node dist/src/main.js"
